@@ -1,12 +1,13 @@
 package com.example.vlkukushkin.lastfm;
 
-import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.SearchView;
@@ -25,8 +26,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -39,10 +38,10 @@ public class MainActivity extends AppCompatActivity {
 
     final String LOG_TAG = "LOG_TAG";
 
-    final String ALBUM_TITLE = "name";
-    final String ALBUM_IMAGE = "album_image";
-    final String GROUP_TITLE = "artist";
-
+    final static String ALBUM_NAME = "name";
+    final static String ALBUM_IMAGE = "album_image";
+    final static String ARTIST = "artist";
+    final static String MBID = "mbid";
 
     SimpleAdapter adapter;
 
@@ -51,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
     private List<Map<String,Object>> data;
 
     public Context context;
+
+    Intent intent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,8 +66,18 @@ public class MainActivity extends AppCompatActivity {
 
         albumsView = (ListView) findViewById(R.id.albums);
 
-        from = new String[] {ALBUM_TITLE, GROUP_TITLE};
-        to = new int[]{R.id.albumTitle, R.id.groupTitle};
+        from = new String[] {ALBUM_NAME, ARTIST};
+        to = new int[]{R.id.itemList_albumTitle, R.id.itemList_groupTitle};
+
+        albumsView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String mbidAlbum = data.get(position).get(MBID).toString();
+                intent = new Intent(MainActivity.this, AlbumActivity.class);
+                intent.putExtra(MBID,mbidAlbum);
+                MainActivity.this.startActivity(intent);
+            }
+        });
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -83,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
                                 public void onResponse(JSONObject res) {
                                     progress.setVisibility(View.INVISIBLE);
                                     data = parseJSON(res);
-                                    adapter = new SimpleAdapter(getApplicationContext(), data, R.layout.item_list, from, to);
+                                    adapter = new SimpleAdapter(getApplicationContext(), data, R.layout.album_list, from, to);
                                     albumsView.setAdapter(adapter);
                                 }
                             }, new Response.ErrorListener() {
@@ -122,13 +133,13 @@ public class MainActivity extends AppCompatActivity {
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
                 String name = jsonObject.getString("name");
                 String artist = jsonObject.getString("artist");
-//                String mbid = jsonObject.getString("mbid");
-//                String mediumImageURL = jsonObject.getJSONArray("image").getJSONObject(1).getString("#text");
+                String mbid = jsonObject.getString(MBID);
+                String mediumImageURL = jsonObject.getJSONArray("image").getJSONObject(1).getString("#text");
 
                 map.put("name",name);
                 map.put("artist",artist);
-//                map.put("mbid", mbid);
-//                map.put("mediumImageURL",mediumImageURL);
+                map.put(MBID, mbid);
+                map.put("mediumImageURL",mediumImageURL);
                 list.add(map);
             }
         } catch (JSONException e) {

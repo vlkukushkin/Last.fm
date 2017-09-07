@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Last.fm</string>
+    <string name="listeners">Listeners</string>
+    <string name="playcount">Playcount</string>
+    <string name="network_error">Network error</string>
+
 </resources>
