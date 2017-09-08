@@ -9,13 +9,6 @@
         android:id="@+id/search"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="invisible" />
     <ListView
         android:id="@+id/albums"
         android:layout_width="match_parent"

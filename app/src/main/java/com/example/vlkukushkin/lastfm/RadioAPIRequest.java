@@ -1,6 +1,7 @@
 package com.example.vlkukushkin.lastfm;
 
 import android.content.Context;
+import android.icu.util.TimeUnit;
 import android.view.View;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
@@ -75,7 +76,7 @@ public class RadioAPIRequest {
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject res) {
-                        JSONObject result = res;
+                        result = res;
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -84,6 +85,12 @@ public class RadioAPIRequest {
                 VolleyLog.d(LOG_TAG, "Error: " + error.getMessage());
             }
         });
+//        try {
+//            requestQueue.add(jsonObjectRequest);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        java.util.concurrent.TimeUnit.SECONDS.sleep(2);
         return result;
     }
 }
@@ -102,7 +109,7 @@ public class RadioAPIRequest {
 //            }, new Response.ErrorListener() {
 //        @Override
 //        public void onErrorResponse(VolleyError error) {
-//            VolleyLog.d(LOG_TAG, "Error: " + error.getMessage());
+//            VolleyLog.d(LOG_VOLLY, "Error: " + error.getMessage());
 //        }
 //    });
 //                    requestQueue.add(jsonObjectRequest);

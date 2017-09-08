@@ -1,5 +1,6 @@
 package com.example.vlkukushkin.lastfm;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -9,9 +10,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.SearchView;
 import android.widget.SimpleAdapter;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -31,17 +32,17 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
-    SearchView searchView;
-    ListView albumsView;
-
-    ProgressBar progress;
-
-    final String LOG_TAG = "LOG_TAG";
+    final String LOG_VOLLY = "LOG_Volly_MainActivity";
 
     final static String ALBUM_NAME = "name";
     final static String ALBUM_IMAGE = "album_image";
     final static String ARTIST = "artist";
     final static String MBID = "mbid";
+
+    SearchView searchView;
+    ListView albumsView;
+
+    ProgressDialog progress;
 
     SimpleAdapter adapter;
 
@@ -58,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        progress = (ProgressBar) findViewById(R.id.progressBar);
+        progress = new ProgressDialog(this,ProgressDialog.STYLE_SPINNER);
 
         context = getApplicationContext();
 
@@ -83,28 +84,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 if (query.length() > 2) {
-                    //@TODO edit method
-                    progress.setVisibility(View.VISIBLE);
-                    RequestQueue requestQueue = Volley.newRequestQueue(context);
-                    String url = "http://ws.audioscrobbler.com/2.0/?method=album.search&album="
-                            + query + "&api_key=d9ec088659404f058418c14bbcd9d461&format=json";
-                    JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
-                            new Response.Listener<JSONObject>() {
-                                @Override
-                                public void onResponse(JSONObject res) {
-                                    progress.setVisibility(View.INVISIBLE);
-                                    data = parseJSON(res);
-                                    adapter = new SimpleAdapter(getApplicationContext(), data, R.layout.album_list, from, to);
-                                    albumsView.setAdapter(adapter);
-                                }
-                            }, new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            VolleyLog.d(LOG_TAG, "Error: " + error.getMessage());
-                        }
-                    });
-                    requestQueue.add(jsonObjectRequest);
-//                    data = convertData
+                    //  Load and set albums data
+                    findAlbums(query);
 
                 }
                 return true;
@@ -116,6 +97,30 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    private void findAlbums(String query) {
+        progress.show();
+        RequestQueue requestQueue = Volley.newRequestQueue(context);
+        String url = "http://ws.audioscrobbler.com/2.0/?method=album.search&album="
+                + query + "&api_key=d9ec088659404f058418c14bbcd9d461&format=json";
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject res) {
+                        data = parseJSON(res);
+                        adapter = new SimpleAdapter(getApplicationContext(), data, R.layout.album_list, from, to);
+                        albumsView.setAdapter(adapter);
+                        progress.hide();
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(context, R.string.network_error,Toast.LENGTH_LONG).show();
+                VolleyLog.d(LOG_VOLLY, "Error: " + error.getMessage());
+            }
+        });
+        requestQueue.add(jsonObjectRequest);
     }
 
     private List<Map<String,Object>> parseJSON(JSONObject JSON) {
@@ -143,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
                 list.add(map);
             }
         } catch (JSONException e) {
-            Log.d("JSON/parsing/error:",e.toString());
+            Log.d("JSON/parsing/error",e.toString());
         };
 
         return list;
