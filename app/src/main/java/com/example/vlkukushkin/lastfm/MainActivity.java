@@ -3,15 +3,22 @@ package com.example.vlkukushkin.lastfm;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.media.Image;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.SimpleAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -26,12 +33,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final String MEDIUM_IMAGE_URL = "mediumImageURL";
     final String LOG_VOLLY = "LOG_Volly_MainActivity";
 
     final static String ALBUM_NAME = "name";
@@ -67,15 +76,19 @@ public class MainActivity extends AppCompatActivity {
 
         albumsView = (ListView) findViewById(R.id.albums);
 
-        from = new String[] {ALBUM_NAME, ARTIST};
-        to = new int[]{R.id.itemList_albumTitle, R.id.itemList_groupTitle};
+        from = new String[] {ALBUM_NAME, ARTIST, "ICON"};
+        to = new int[]{R.id.itemList_albumTitle, R.id.itemList_groupTitle,R.id.itemList_albumImage};
 
         albumsView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 String mbidAlbum = data.get(position).get(MBID).toString();
+                String album = data.get(position).get(ALBUM_NAME).toString();
+                String artist = data.get(position).get(ARTIST).toString();
                 intent = new Intent(MainActivity.this, AlbumActivity.class);
                 intent.putExtra(MBID,mbidAlbum);
+                intent.putExtra(ARTIST, artist);
+                intent.putExtra(ALBUM_NAME, album);
                 MainActivity.this.startActivity(intent);
             }
         });
@@ -86,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
                 if (query.length() > 2) {
                     //  Load and set albums data
                     findAlbums(query);
+                    searchView.clearFocus();
 
                 }
                 return true;
@@ -111,7 +125,18 @@ public class MainActivity extends AppCompatActivity {
                         data = parseJSON(res);
                         adapter = new SimpleAdapter(getApplicationContext(), data, R.layout.album_list, from, to);
                         albumsView.setAdapter(adapter);
+                        albumsView.getAdapter();
                         progress.hide();
+                        for (int i = 0; i < 5; i++) {
+                            View v = albumsView.getAdapter().getView(1,null,albumsView);
+                            TextView textView =(TextView) v.findViewById(R.id.itemList_groupTitle);
+                            textView.setText("1233");
+                            albumsView.getChildAt(1).setBackgroundColor(Color.RED);
+                            albumsView.invalidateDrawable();
+                            //ImageView albumImage = (ImageView) albumViewItem.findViewById(R.id.itemList_albumImage);
+                            // new DownloadImageTask(albumImage)
+                                    //.execute(data.get(i).get(MEDIUM_IMAGE_URL).toString());
+                        }
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -140,11 +165,11 @@ public class MainActivity extends AppCompatActivity {
                 String artist = jsonObject.getString("artist");
                 String mbid = jsonObject.getString(MBID);
                 String mediumImageURL = jsonObject.getJSONArray("image").getJSONObject(1).getString("#text");
-
+                map.put("ICON", R.drawable.ic_cd);
                 map.put("name",name);
                 map.put("artist",artist);
                 map.put(MBID, mbid);
-                map.put("mediumImageURL",mediumImageURL);
+                map.put(MEDIUM_IMAGE_URL,mediumImageURL);
                 list.add(map);
             }
         } catch (JSONException e) {
@@ -153,5 +178,29 @@ public class MainActivity extends AppCompatActivity {
 
         return list;
     }
+    private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
+        ImageView bmImage;
 
+        public DownloadImageTask(ImageView bmImage) {
+            this.bmImage = bmImage;
+        }
+
+        protected Bitmap doInBackground(String... urls) {
+            Log.d("Loading image IRL:", urls[0]);
+            String urldisplay = urls[0];
+            Bitmap mIcon11 = null;
+            try {
+                InputStream in = new java.net.URL(urldisplay).openStream();
+                mIcon11 = BitmapFactory.decodeStream(in);
+            } catch (Exception e) {
+                Log.e("Error", e.getMessage());
+                e.printStackTrace();
+            }
+            return mIcon11;
+        }
+
+        protected void onPostExecute(Bitmap result) {
+            bmImage.setImageBitmap(result);
+        }
+    }
 }
