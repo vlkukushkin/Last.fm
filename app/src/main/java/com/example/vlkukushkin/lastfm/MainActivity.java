@@ -3,22 +3,30 @@ package com.example.vlkukushkin.lastfm;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.media.Image;
 import android.os.AsyncTask;
+import android.provider.SearchRecentSuggestions;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v4.widget.SimpleCursorAdapter;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.util.ArrayMap;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.AdapterView;
+import android.widget.AutoCompleteTextView;
 import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.SearchView;
 import android.widget.SimpleAdapter;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -28,6 +36,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -35,8 +44,11 @@ import org.json.JSONObject;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import io.realm.Realm;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -48,68 +60,133 @@ public class MainActivity extends AppCompatActivity {
     final static String ARTIST = "artist";
     final static String MBID = "mbid";
 
-    SearchView searchView;
-    ListView albumsView;
+    MaterialSearchView searchView;
+    RecyclerView albumsView;
 
     ProgressDialog progress;
 
     SimpleAdapter adapter;
 
+    private Realm realm;
+
     private String[] from;
     private int[] to;
     private List<Map<String,Object>> data;
+
+    private RVAdapter rvAdapter;
 
     public Context context;
 
     Intent intent;
 
+    LinkedList <String>searchRequsts;
+
+    SimpleCursorAdapter cursorAdapter;
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+
+        MenuItem item = menu.findItem(R.id.action_search);
+
+        searchView.setMenuItem(item);
+//        searchView = (SearchView) MenuItemCompat.getActionView(item);
+
+
+
+        return true;
+    }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        toolbar.setTitle("132");
+
         setContentView(R.layout.activity_main);
+
+        searchRequsts = new <String>LinkedList();
 
         progress = new ProgressDialog(this,ProgressDialog.STYLE_SPINNER);
 
         context = getApplicationContext();
 
-        searchView = (SearchView) findViewById(R.id.search);
+        searchView = (MaterialSearchView) findViewById(R.id.search_view);
 
-        albumsView = (ListView) findViewById(R.id.albums);
-
-        from = new String[] {ALBUM_NAME, ARTIST, "ICON"};
-        to = new int[]{R.id.itemList_albumTitle, R.id.itemList_groupTitle,R.id.itemList_albumImage};
-
-        albumsView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String mbidAlbum = data.get(position).get(MBID).toString();
-                String album = data.get(position).get(ALBUM_NAME).toString();
-                String artist = data.get(position).get(ARTIST).toString();
-                intent = new Intent(MainActivity.this, AlbumActivity.class);
-                intent.putExtra(MBID,mbidAlbum);
-                intent.putExtra(ARTIST, artist);
-                intent.putExtra(ALBUM_NAME, album);
-                MainActivity.this.startActivity(intent);
-            }
-        });
-
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        searchView.setOnQueryTextListener(new MaterialSearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 if (query.length() > 2) {
+                    if (searchRequsts.size() >= 10) searchRequsts.remove();
+                    searchRequsts.add(query);
                     //  Load and set albums data
                     findAlbums(query);
                     searchView.clearFocus();
-
+//
                 }
                 return true;
             }
 
+
             @Override
             public boolean onQueryTextChange(String newText) {
+
                 return false;
             }
         });
+//        realm = Realm.getDefaultInstance();
+
+        from = new String[]{"AJAkdfkmgfldbk","gdklkgdg"};
+        to = new int []{android.R.id.text1};
+
+//        searchView = (SearchView) findViewById(R.id.searchView);
+//
+
+        from = new String[] {"raz", "dva"};
+        searchView.setSuggestions(from);
+        albumsView = (RecyclerView) findViewById(R.id.albums);
+
+
+        LinearLayoutManager llm = new LinearLayoutManager(context);
+        albumsView.setLayoutManager(llm);
+
+//        albumsView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                String mbidAlbum = data.get(position).get(MBID).toString();
+//                String album = data.get(position).get(ALBUM_NAME).toString();
+//                String artist = data.get(position).get(ARTIST).toString();
+//                intent = new Intent(MainActivity.this, AlbumActivity.class);
+//                intent.putExtra(MBID,mbidAlbum);
+//                intent.putExtra(ARTIST, artist);
+//                intent.putExtra(ALBUM_NAME, album);
+//                MainActivity.this.startActivity(intent);
+//            }
+//        });
+        albumsView.addOnItemTouchListener(
+                new RecyclerItemClickListener(context,albumsView, new RecyclerItemClickListener.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(View view, int position) {
+                        String mbidAlbum = data.get(position).get(MBID).toString();
+                        String album = data.get(position).get(ALBUM_NAME).toString();
+                        String artist = data.get(position).get(ARTIST).toString();
+                        intent = new Intent(MainActivity.this, AlbumActivity.class);
+                        intent.putExtra(MBID,mbidAlbum);
+                        intent.putExtra(ARTIST, artist);
+                        intent.putExtra(ALBUM_NAME, album);
+                        MainActivity.this.startActivity(intent);
+                    }
+
+                    @Override
+                    public void onLongItemClick(View view, int position) {
+
+                    }
+                }));
+
+
 
     }
 
@@ -123,20 +200,23 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(JSONObject res) {
                         data = parseJSON(res);
-                        adapter = new SimpleAdapter(getApplicationContext(), data, R.layout.album_list, from, to);
-                        albumsView.setAdapter(adapter);
-                        albumsView.getAdapter();
+//                        adapter = new SimpleAdapter(getApplicationContext(), data, R.layout.album_list_item, from, to);
+//                        albumsView.setAdapter(adapter);
+//                        albumsView.getAdapter();
+                        rvAdapter = new RVAdapter(data);
+                        albumsView.setAdapter(rvAdapter);
+
                         progress.hide();
-                        for (int i = 0; i < 5; i++) {
-                            View v = albumsView.getAdapter().getView(1,null,albumsView);
-                            TextView textView =(TextView) v.findViewById(R.id.itemList_groupTitle);
-                            textView.setText("1233");
-                            albumsView.getChildAt(1).setBackgroundColor(Color.RED);
-                            albumsView.invalidateDrawable();
+//  for (int i = 0; i < 5; i++) {
+//                            View v = albumsView.getAdapter().getView(1,null,albumsView);
+//                            TextView textView =(TextView) v.findViewById(R.id.itemList_groupTitle);
+//                            textView.setText("1233");
+//                            albumsView.getChildAt(1).setBackgroundColor(Color.RED);
+              //              albumsView.invalidateDrawable();
                             //ImageView albumImage = (ImageView) albumViewItem.findViewById(R.id.itemList_albumImage);
                             // new DownloadImageTask(albumImage)
                                     //.execute(data.get(i).get(MEDIUM_IMAGE_URL).toString());
-                        }
+                        //}
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -203,4 +283,5 @@ public class MainActivity extends AppCompatActivity {
             bmImage.setImageBitmap(result);
         }
     }
+
 }

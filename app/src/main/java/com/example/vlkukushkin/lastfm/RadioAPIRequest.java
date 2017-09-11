@@ -103,7 +103,7 @@ public class RadioAPIRequest {
 //                public void onResponse(JSONObject res) {
 //                    progress.setVisibility(View.INVISIBLE);
 //                    data = parseJSON(res);
-//                    adapter = new SimpleAdapter(getApplicationContext(), data, R.layout.album_list, from, to);
+//                    adapter = new SimpleAdapter(getApplicationContext(), data, R.layout.album_list_item, from, to);
 //                    albumsView.setAdapter(adapter);
 //                }
 //            }, new Response.ErrorListener() {

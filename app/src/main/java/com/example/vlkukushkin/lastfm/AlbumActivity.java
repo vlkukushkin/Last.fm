@@ -13,7 +13,6 @@ import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -147,7 +146,7 @@ public class AlbumActivity extends AppCompatActivity {
             tracks.add(mapTrack.get(NAME));
         }
 
-        ArrayAdapter adapter = new ArrayAdapter(context,R.layout.song_list,R.id.songText, tracks);
+        ArrayAdapter adapter = new ArrayAdapter(context,R.layout.song_list_item,R.id.songText, tracks);
         songVIew.setAdapter(adapter);
     }
 
