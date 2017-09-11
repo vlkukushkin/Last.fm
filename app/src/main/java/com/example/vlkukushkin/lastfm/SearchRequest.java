@@ -12,7 +12,6 @@ public class SearchRequest extends RealmObject {
     @Required
     private String request;
 
-
     public String getRequest() {
         return request;
     }

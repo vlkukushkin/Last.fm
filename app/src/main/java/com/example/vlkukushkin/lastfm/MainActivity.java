@@ -3,21 +3,17 @@ package com.example.vlkukushkin.lastfm;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -27,12 +23,14 @@ import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.lapism.searchview.SearchAdapter;
+import com.lapism.searchview.SearchItem;
+import com.lapism.searchview.SearchView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -43,51 +41,87 @@ import io.realm.RealmResults;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final String MEDIUM_IMAGE_URL = "mediumImageURL";
     final String LOG_VOLLY = "LOG_Volly_MainActivity";
 
     final static String ALBUM_NAME = "name";
     final static String ALBUM_IMAGE = "album_image";
     final static String ARTIST = "artist";
     final static String MBID = "mbid";
+    public static final String MEDIUM_IMAGE_URL = "mediumImageURL";
 
     SearchView searchView;
     RecyclerView albumsView;
-
     ProgressDialog progress;
 
 
     private Realm realm;
-
     private List<Map<String,Object>> data;
-
     private RVAdapter rvAdapter;
 
     public Context context;
-
     Intent intent;
 
     LinkedList <String>searchRequsts;
+    List<SearchItem> suggestionsList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Realm.init(this);
-
         setContentView(R.layout.activity_main);
-
-
         realm = Realm.getDefaultInstance();
 
-//        realm.beginTransaction();
-//        SearchRequest searchRequst = realm.createObject(SearchRequest.class);
-//        searchRequst.setRequest("Test_test");
-//        realm.commitTransaction();
+        searchView = (SearchView) findViewById(R.id.searchView);
 
-        RealmResults<SearchRequest> allSearchRequsts = realm.where(SearchRequest.class).findAll();
-        Log.d("tagger",allSearchRequsts.toString());
+        RealmResults<SearchRequest> allSearchReqests = realm.where(SearchRequest.class).findAll();
+
+        suggestionsList = new ArrayList<>();
+
+        for (int i = 0; i < allSearchReqests.size(); i++) {
+            String savedRequest = allSearchReqests.get(i).getRequest();
+            suggestionsList.add(new SearchItem(savedRequest));
+        }
+
+        SearchAdapter searchAdapter = new SearchAdapter(this, suggestionsList);
+
+        searchView.setAdapter(searchAdapter);
+
+
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                if (query.length() > 2) {
+                    if (suggestionsList.size() >= 10) {
+                        suggestionsList.remove(0);
+                        suggestionsList.add(new SearchItem(query));
+                    } else
+                        suggestionsList.add(new SearchItem(query));
+
+//                    realm.delete(SearchRequest.class);
+//                    realm.beginTransaction();
+//                    SearchRequest searchRequst = realm.createObject(SearchRequest.class);
+//                    for (int i = 0; i < suggestionsList.size(); i++) {
+//                        realm.beginTransaction();
+//                        realm.createObject(SearchRequest.class);
+//                        SearchRequest.ad
+//                    }
+//                    realm.commitTransaction();
+                    //  Load and set albums data
+                    findAlbums(query);
+                    searchView.clearFocus();
+                }
+                return true;
+            }
+            @Override
+            public boolean onQueryTextChange(String newText) {
+
+                return false;
+            }
+        });
 
         searchRequsts = new <String>LinkedList();
+
 
         progress = new ProgressDialog(this,ProgressDialog.STYLE_SPINNER);
 
@@ -120,37 +154,6 @@ public class MainActivity extends AppCompatActivity {
                 }));
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu, menu);
-
-        MenuItem item = menu.findItem(R.id.action_search);
-        searchView = (SearchView) MenuItemCompat.getActionView(item);
-
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                if (query.length() > 2) {
-                    if (searchRequsts.size() >= 10) searchRequsts.remove();
-                    searchRequsts.add(query);
-                    //  Load and set albums data
-                    findAlbums(query);
-                    searchView.clearFocus();
-//
-                }
-                return true;
-            }
-
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-
-                return false;
-            }
-        });
-
-        return true;
-    }
 
     private void findAlbums(String query) {
         progress.show();
