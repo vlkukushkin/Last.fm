@@ -34,7 +34,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:recyclerview-v7:25.3.1'
     compile 'com.squareup.picasso:picasso:2.5.2'
-    compile 'com.miguelcatalan:materialsearchview:1.4.0'
+    compile  'com.lapism:searchview:4.0'
 }
 realm {
     syncEnabled = true;

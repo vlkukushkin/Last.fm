@@ -3,30 +3,21 @@ package com.example.vlkukushkin.lastfm;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
-import android.provider.SearchRecentSuggestions;
-import android.support.v4.view.MenuItemCompat;
-import android.support.v4.widget.SimpleCursorAdapter;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
-import android.support.v7.widget.Toolbar;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
-import android.widget.AdapterView;
-import android.widget.AutoCompleteTextView;
 import android.widget.ImageView;
-import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -36,7 +27,6 @@ import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -49,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.realm.Realm;
+import io.realm.RealmResults;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -60,17 +51,14 @@ public class MainActivity extends AppCompatActivity {
     final static String ARTIST = "artist";
     final static String MBID = "mbid";
 
-    MaterialSearchView searchView;
+    SearchView searchView;
     RecyclerView albumsView;
 
     ProgressDialog progress;
 
-    SimpleAdapter adapter;
 
     private Realm realm;
 
-    private String[] from;
-    private int[] to;
     private List<Map<String,Object>> data;
 
     private RVAdapter rvAdapter;
@@ -81,32 +69,23 @@ public class MainActivity extends AppCompatActivity {
 
     LinkedList <String>searchRequsts;
 
-    SimpleCursorAdapter cursorAdapter;
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu, menu);
-
-        MenuItem item = menu.findItem(R.id.action_search);
-
-        searchView.setMenuItem(item);
-//        searchView = (SearchView) MenuItemCompat.getActionView(item);
-
-
-
-        return true;
-    }
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        toolbar.setTitle("132");
+        Realm.init(this);
 
         setContentView(R.layout.activity_main);
+
+
+        realm = Realm.getDefaultInstance();
+
+//        realm.beginTransaction();
+//        SearchRequest searchRequst = realm.createObject(SearchRequest.class);
+//        searchRequst.setRequest("Test_test");
+//        realm.commitTransaction();
+
+        RealmResults<SearchRequest> allSearchRequsts = realm.where(SearchRequest.class).findAll();
+        Log.d("tagger",allSearchRequsts.toString());
 
         searchRequsts = new <String>LinkedList();
 
@@ -114,9 +93,41 @@ public class MainActivity extends AppCompatActivity {
 
         context = getApplicationContext();
 
-        searchView = (MaterialSearchView) findViewById(R.id.search_view);
+        albumsView = (RecyclerView) findViewById(R.id.albums);
 
-        searchView.setOnQueryTextListener(new MaterialSearchView.OnQueryTextListener() {
+
+        LinearLayoutManager llm = new LinearLayoutManager(context);
+        albumsView.setLayoutManager(llm);
+
+        albumsView.addOnItemTouchListener(
+                new RecyclerItemClickListener(context,albumsView, new RecyclerItemClickListener.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(View view, int position) {
+                        String mbidAlbum = data.get(position).get(MBID).toString();
+                        String album = data.get(position).get(ALBUM_NAME).toString();
+                        String artist = data.get(position).get(ARTIST).toString();
+                        intent = new Intent(MainActivity.this, AlbumActivity.class);
+                        intent.putExtra(MBID,mbidAlbum);
+                        intent.putExtra(ARTIST, artist);
+                        intent.putExtra(ALBUM_NAME, album);
+                        MainActivity.this.startActivity(intent);
+                    }
+
+                    @Override
+                    public void onLongItemClick(View view, int position) {
+
+                    }
+                }));
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+
+        MenuItem item = menu.findItem(R.id.action_search);
+        searchView = (SearchView) MenuItemCompat.getActionView(item);
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 if (query.length() > 2) {
@@ -137,57 +148,8 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
-//        realm = Realm.getDefaultInstance();
 
-        from = new String[]{"AJAkdfkmgfldbk","gdklkgdg"};
-        to = new int []{android.R.id.text1};
-
-//        searchView = (SearchView) findViewById(R.id.searchView);
-//
-
-        from = new String[] {"raz", "dva"};
-        searchView.setSuggestions(from);
-        albumsView = (RecyclerView) findViewById(R.id.albums);
-
-
-        LinearLayoutManager llm = new LinearLayoutManager(context);
-        albumsView.setLayoutManager(llm);
-
-//        albumsView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                String mbidAlbum = data.get(position).get(MBID).toString();
-//                String album = data.get(position).get(ALBUM_NAME).toString();
-//                String artist = data.get(position).get(ARTIST).toString();
-//                intent = new Intent(MainActivity.this, AlbumActivity.class);
-//                intent.putExtra(MBID,mbidAlbum);
-//                intent.putExtra(ARTIST, artist);
-//                intent.putExtra(ALBUM_NAME, album);
-//                MainActivity.this.startActivity(intent);
-//            }
-//        });
-        albumsView.addOnItemTouchListener(
-                new RecyclerItemClickListener(context,albumsView, new RecyclerItemClickListener.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(View view, int position) {
-                        String mbidAlbum = data.get(position).get(MBID).toString();
-                        String album = data.get(position).get(ALBUM_NAME).toString();
-                        String artist = data.get(position).get(ARTIST).toString();
-                        intent = new Intent(MainActivity.this, AlbumActivity.class);
-                        intent.putExtra(MBID,mbidAlbum);
-                        intent.putExtra(ARTIST, artist);
-                        intent.putExtra(ALBUM_NAME, album);
-                        MainActivity.this.startActivity(intent);
-                    }
-
-                    @Override
-                    public void onLongItemClick(View view, int position) {
-
-                    }
-                }));
-
-
-
+        return true;
     }
 
     private void findAlbums(String query) {
@@ -200,23 +162,10 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(JSONObject res) {
                         data = parseJSON(res);
-//                        adapter = new SimpleAdapter(getApplicationContext(), data, R.layout.album_list_item, from, to);
-//                        albumsView.setAdapter(adapter);
-//                        albumsView.getAdapter();
                         rvAdapter = new RVAdapter(data);
                         albumsView.setAdapter(rvAdapter);
 
                         progress.hide();
-//  for (int i = 0; i < 5; i++) {
-//                            View v = albumsView.getAdapter().getView(1,null,albumsView);
-//                            TextView textView =(TextView) v.findViewById(R.id.itemList_groupTitle);
-//                            textView.setText("1233");
-//                            albumsView.getChildAt(1).setBackgroundColor(Color.RED);
-              //              albumsView.invalidateDrawable();
-                            //ImageView albumImage = (ImageView) albumViewItem.findViewById(R.id.itemList_albumImage);
-                            // new DownloadImageTask(albumImage)
-                                    //.execute(data.get(i).get(MEDIUM_IMAGE_URL).toString());
-                        //}
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -258,30 +207,4 @@ public class MainActivity extends AppCompatActivity {
 
         return list;
     }
-    private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
-        ImageView bmImage;
-
-        public DownloadImageTask(ImageView bmImage) {
-            this.bmImage = bmImage;
-        }
-
-        protected Bitmap doInBackground(String... urls) {
-            Log.d("Loading image IRL:", urls[0]);
-            String urldisplay = urls[0];
-            Bitmap mIcon11 = null;
-            try {
-                InputStream in = new java.net.URL(urldisplay).openStream();
-                mIcon11 = BitmapFactory.decodeStream(in);
-            } catch (Exception e) {
-                Log.e("Error", e.getMessage());
-                e.printStackTrace();
-            }
-            return mIcon11;
-        }
-
-        protected void onPostExecute(Bitmap result) {
-            bmImage.setImageBitmap(result);
-        }
-    }
-
 }
