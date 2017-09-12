@@ -3,14 +3,20 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal"
     android:layout_width="match_parent"
-    android:layout_height="50dp"
-    android:id="@+id/songLayout">
+    android:layout_height="40dp"
+    android:background="@color/dark_gray"
+    android:id="@+id/songLayout"
+    android:layout_marginBottom="2dp">
     <ImageView
         android:padding="5dp"
         android:src="@android:drawable/stat_sys_headset"
         android:layout_width="wrap_content"
         android:layout_height="match_parent" />
     <TextView
+        android:linksClickable="true"
+        android:textColorLink="@color/lime"
+        android:autoLink="web"
+        android:textColor="@color/light_gray"
         android:id="@+id/songText"
         android:gravity="center"
         android:layout_width="match_parent"
