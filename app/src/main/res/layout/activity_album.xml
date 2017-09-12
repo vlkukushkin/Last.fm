@@ -12,12 +12,14 @@
         android:layout_width="match_parent"
         android:layout_height="150dp" />
     <TextView
+        android:textStyle="bold"
         android:id="@+id/activityAlbum_groupTitle"
-        android:textSize="17sp"
+        android:textSize="22sp"
         android:layout_gravity="center_horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
     <TextView
+        android:textStyle="italic"
         android:id="@+id/activityAlbum_albumTitle"
         android:textSize="17sp"
         android:layout_gravity="center_horizontal"
@@ -42,14 +44,16 @@
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="25dp">
+        android:layout_height="22dp">
         <TextView
+            android:textStyle="bold"
             android:layout_weight="1"
             android:gravity="center"
             android:text="@string/playcount"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
         <TextView
+            android:textStyle="bold"
             android:layout_weight="1"
             android:gravity="center"
             android:text="@string/listeners"
@@ -58,7 +62,7 @@
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="25dp">
+        android:layout_height="22dp">
         <TextView
             android:layout_weight="1"
             android:id="@+id/playcountValue"

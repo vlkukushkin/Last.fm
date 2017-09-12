@@ -4,16 +4,12 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.ArrayMap;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -53,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView albumsView;
     ProgressDialog progress;
 
+    String url;
 
     private Realm realm;
     private List<Map<String,Object>> data;
@@ -73,20 +70,17 @@ public class MainActivity extends AppCompatActivity {
 
         searchView = (SearchView) findViewById(R.id.searchView);
 
-        RealmResults<SearchRequest> allSearchReqests = realm.where(SearchRequest.class).findAll();
-
+        RealmResults<SearchQuery> allSearchReqests = realm.where(SearchQuery.class).findAll();
         suggestionsList = new ArrayList<>();
 
         for (int i = 0; i < allSearchReqests.size(); i++) {
-            String savedRequest = allSearchReqests.get(i).getRequest();
+            String savedRequest = allSearchReqests.get(i).getQuery();
             suggestionsList.add(new SearchItem(savedRequest));
         }
 
         SearchAdapter searchAdapter = new SearchAdapter(this, suggestionsList);
 
         searchView.setAdapter(searchAdapter);
-
-
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -97,17 +91,13 @@ public class MainActivity extends AppCompatActivity {
                         suggestionsList.add(new SearchItem(query));
                     } else
                         suggestionsList.add(new SearchItem(query));
-
-//                    realm.delete(SearchRequest.class);
-//                    realm.beginTransaction();
-//                    SearchRequest searchRequst = realm.createObject(SearchRequest.class);
-//                    for (int i = 0; i < suggestionsList.size(); i++) {
-//                        realm.beginTransaction();
-//                        realm.createObject(SearchRequest.class);
-//                        SearchRequest.ad
-//                    }
-//                    realm.commitTransaction();
-                    //  Load and set albums data
+                    realm.beginTransaction();
+                    realm.delete(SearchQuery.class);
+                    for (int i = 0; i < suggestionsList.size(); i++) {
+                       SearchQuery searchQuery = realm.createObject(SearchQuery.class);
+                       searchQuery.setQuery(suggestionsList.get(i).get_text().toString());
+                    }
+                    realm.commitTransaction();
                     findAlbums(query);
                     searchView.clearFocus();
                 }
@@ -158,8 +148,9 @@ public class MainActivity extends AppCompatActivity {
     private void findAlbums(String query) {
         progress.show();
         RequestQueue requestQueue = Volley.newRequestQueue(context);
-        String url = "http://ws.audioscrobbler.com/2.0/?method=album.search&album="
-                + query + "&api_key=d9ec088659404f058418c14bbcd9d461&format=json";
+        ApiURLConstructor.albumSearch(query);
+        url = ApiURLConstructor.albumSearch(query);
+        Log.d("MainActivity/request",url);
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONObject>() {
                     @Override
@@ -173,7 +164,8 @@ public class MainActivity extends AppCompatActivity {
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(context, R.string.network_error,Toast.LENGTH_LONG).show();
+                progress.hide();
+                Toast.makeText(context, R.string.network_error,Toast.LENGTH_SHORT).show();
                 VolleyLog.d(LOG_VOLLY, "Error: " + error.getMessage());
             }
         });
@@ -196,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
                 String name = jsonObject.getString("name");
                 String artist = jsonObject.getString("artist");
                 String mbid = jsonObject.getString(MBID);
-                String mediumImageURL = jsonObject.getJSONArray("image").getJSONObject(1).getString("#text");
+                String mediumImageURL = jsonObject.getJSONArray("image").getJSONObject(2).getString("#text");
                 map.put("ICON", R.drawable.ic_cd);
                 map.put("name",name);
                 map.put("artist",artist);

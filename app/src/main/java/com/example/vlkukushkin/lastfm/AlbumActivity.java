@@ -52,15 +52,15 @@ public class AlbumActivity extends AppCompatActivity {
     Intent intent;
 
     String mbid;
-    String albumText;
-    String artistText;
+    String album;
+    String artist;
 
     Context context;
 
     ProgressDialog progress;
     TextView description;
-    TextView album;
-    TextView group;
+    TextView albumView;
+    TextView artistView;
     TextView playcount;
     TextView listeners;
     ImageView albumImage;
@@ -68,6 +68,7 @@ public class AlbumActivity extends AppCompatActivity {
 
     private Map<String,Object> data;
 
+    String url;
 
     @Override
     protected void onPause() {
@@ -81,8 +82,8 @@ public class AlbumActivity extends AppCompatActivity {
         setContentView(R.layout.activity_album);
 
         albumImage = (ImageView) findViewById(R.id.activityAlbum_albumImage);
-        album = (TextView) findViewById(R.id.activityAlbum_albumTitle);
-        group = (TextView) findViewById(R.id.activityAlbum_groupTitle);
+        albumView = (TextView) findViewById(R.id.activityAlbum_albumTitle);
+        artistView = (TextView) findViewById(R.id.activityAlbum_groupTitle);
         playcount = (TextView) findViewById(R.id.playcountValue);
         listeners = (TextView) findViewById(R.id.listenersValue);
         description = (TextView) findViewById(R.id.activityAlbum_description    );
@@ -95,11 +96,11 @@ public class AlbumActivity extends AppCompatActivity {
         intent = getIntent();
 
         mbid = intent.getStringExtra(MainActivity.MBID);
-        albumText = intent.getStringExtra(MainActivity.ALBUM_NAME);
-        artistText = intent.getStringExtra(MainActivity.ARTIST);
+        album = intent.getStringExtra(MainActivity.ALBUM_NAME);
+        artist = intent.getStringExtra(MainActivity.ARTIST);
 
-        album.setText(albumText);
-        group.setText(artistText);
+        albumView.setText(album);
+        artistView.setText(artist);
 
         SetAlbumData();
     }
@@ -107,13 +108,10 @@ public class AlbumActivity extends AppCompatActivity {
     private void SetAlbumData() {
         progress.show();
         RequestQueue requestQueue = Volley.newRequestQueue(context);
-        String url = "http://ws.audioscrobbler.com";
         if (mbid.isEmpty())
-            url = url.concat("/2.0/?method=album.getinfo&api_key=&api_key=d9ec088659404f058418c14bbcd9d461&artist=Cher&album=Believe&format=json" +
-                      "&artist=" + artistText + "&alb   um=" + albumText);
-            else
-            url = url.concat("/2.0/?method=album.getinfo&api_key=d9ec088659404f058418c14bbcd9d461&mbid="
-                + mbid +"&format=json");
+            url = ApiURLConstructor.albumGetInfo(artist, album);
+        else
+            url = ApiURLConstructor.albumGetInfo(mbid);
         Log.d("AlbumActivity/request",url);
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONObject>() {
@@ -132,7 +130,8 @@ public class AlbumActivity extends AppCompatActivity {
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(context, R.string.network_error,Toast.LENGTH_LONG).show();
+                progress.hide();
+                Toast.makeText(context, R.string.network_error,Toast.LENGTH_SHORT).show();
                 VolleyLog.d(LOG_VOLLY, "Error: " + error.getMessage());
             }
         });
