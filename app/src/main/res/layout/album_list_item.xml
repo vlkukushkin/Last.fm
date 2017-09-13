@@ -25,6 +25,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
         <TextView
+            android:textColor="@color/white"
             android:textStyle="bold"
             android:lines="2"
             android:layout_gravity="center_horizontal"
@@ -36,6 +37,7 @@
             android:layout_height="wrap_content" />
 
         <TextView
+            android:textColor="@color/white"
             android:textStyle="italic"
             android:lines="3"
             android:layout_gravity="center_horizontal"

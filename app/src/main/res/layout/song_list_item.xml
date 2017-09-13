@@ -4,7 +4,7 @@
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="40dp"
-    android:background="@color/black"
+    android:background="@color/purple"
     android:id="@+id/songLayout"
     android:layout_marginBottom="2dp">
     <ImageView
@@ -16,7 +16,7 @@
         android:linksClickable="true"
         android:textColorLink="@color/lime"
         android:autoLink="web"
-        android:textColor="@color/light_gray"
+        android:textColor="@color/white"
         android:id="@+id/songText"
         android:gravity="center"
         android:layout_width="match_parent"

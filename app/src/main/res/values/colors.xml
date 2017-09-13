@@ -9,4 +9,8 @@
     <color name="lime">#f4ff81</color>
     <color name="black">#212121</color>
     <color name="absolut_black">#000000</color>
+    <color name="purple">#aa00ff</color>
+    <color name="dark_purple">#6a1b9a</color>
+    <color name="light_green">#69f0ae</color>
+    <color name="white">#ffffff</color>
 </resources>

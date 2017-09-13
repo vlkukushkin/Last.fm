@@ -69,9 +69,9 @@ public class RVAdapter extends RecyclerView.Adapter<RVAdapter.AlbumHolder>{
             artist.setText((data.get(MainActivity.ARTIST).toString()));
             String imageURL = (data.get(MainActivity.MEDIUM_IMAGE_URL).toString());
             if (position % 2 == 0)
-                layout.setBackgroundColor(ContextCompat.getColor(context,R.color.dark_gray));
+                layout.setBackgroundColor(ContextCompat.getColor(context,R.color.purple));
             else
-                layout.setBackgroundColor(ContextCompat.getColor(context,R.color.gray));
+                layout.setBackgroundColor(ContextCompat.getColor(context,R.color.colorAccent));
             if (!imageURL.isEmpty()) {
                 Picasso.with(context)
                         .load(data.get(MainActivity.MEDIUM_IMAGE_URL).toString())
