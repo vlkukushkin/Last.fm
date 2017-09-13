@@ -40,7 +40,6 @@ public class MainActivity extends AppCompatActivity {
     final String LOG_VOLLY = "LOG_Volly_MainActivity";
 
     final static String ALBUM_NAME = "name";
-    final static String ALBUM_IMAGE = "album_image";
     final static String ARTIST = "artist";
     final static String MBID = "mbid";
     public static final String MEDIUM_IMAGE_URL = "mediumImageURL";
@@ -79,8 +78,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
         SearchAdapter searchAdapter = new SearchAdapter(this, suggestionsList);
-
+        searchAdapter.addOnItemClickListener(new SearchAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {;
+                CharSequence queryText = suggestionsList.get(position).get_text();
+                Log.d("Clicked #",String.valueOf(position-1));
+                searchView.setQuery(queryText,true);
+            }
+        });
         searchView.setAdapter(searchAdapter);
+
+
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -150,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
         RequestQueue requestQueue = Volley.newRequestQueue(context);
         ApiURLConstructor.albumSearch(query);
         url = ApiURLConstructor.albumSearch(query);
-        Log.d("MainActivity/request",url);
+        Log.d(this.getLocalClassName() + "/request",url);
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONObject>() {
                     @Override
@@ -186,12 +194,12 @@ public class MainActivity extends AppCompatActivity {
 
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
                 String name = jsonObject.getString("name");
-                String artist = jsonObject.getString("artist");
+                String artist = jsonObject.getString(ARTIST);
                 String mbid = jsonObject.getString(MBID);
                 String mediumImageURL = jsonObject.getJSONArray("image").getJSONObject(2).getString("#text");
                 map.put("ICON", R.drawable.ic_cd);
                 map.put("name",name);
-                map.put("artist",artist);
+                map.put(ARTIST,artist);
                 map.put(MBID, mbid);
                 map.put(MEDIUM_IMAGE_URL,mediumImageURL);
                 list.add(map);

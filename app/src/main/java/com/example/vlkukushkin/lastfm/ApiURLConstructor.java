@@ -30,13 +30,11 @@ public class ApiURLConstructor {
     public static final String  MBID= "mbid";
 
 
-
-
-
 /*
         api Request Example:
         http://ws.audioscrobbler.com/2.0?method=album.search&api_key=d9ec088659404f058418c14bbcd9d461&format=json&album=smoke
 */
+
     public static String albumSearch(String album) {
         Uri.Builder builder = new Uri.Builder();
         builder.scheme(ApiURLConstructor.SCHEME)
