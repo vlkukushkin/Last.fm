@@ -7,4 +7,6 @@
     <color name="gray">#616161</color>
     <color name="light_gray">#bdbdbd</color>
     <color name="lime">#f4ff81</color>
+    <color name="black">#212121</color>
+    <color name="absolut_black">#000000</color>
 </resources>

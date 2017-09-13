@@ -5,11 +5,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Html;
 import android.util.ArrayMap;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -103,6 +107,18 @@ public class AlbumActivity extends AppCompatActivity {
         artistView.setText(artist);
 
         SetAlbumData();
+
+        songVIew.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                ArrayList tracksList = (ArrayList) data.get(TRACKS);
+                Map track  = (Map) tracksList.get(position);
+                String url = track.get(URL).toString();
+                Intent intentBrowser = new Intent(Intent.ACTION_VIEW);
+                intentBrowser.setData(Uri.parse(url));
+                startActivity(intentBrowser);
+            }
+        });
     }
 
     private void SetAlbumData() {
@@ -112,7 +128,7 @@ public class AlbumActivity extends AppCompatActivity {
             url = ApiURLConstructor.albumGetInfo(artist, album);
         else
             url = ApiURLConstructor.albumGetInfo(mbid);
-        Log.d("AlbumActivity/request",url);
+        Log.d(this.getLocalClassName() + "/request",url);
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONObject>() {
                     @Override
@@ -123,7 +139,9 @@ public class AlbumActivity extends AppCompatActivity {
                                 .execute(data.get(MEDIUM_IMAGE_URL).toString());
                         playcount.setText(data.get(PLAYCOUNT).toString());
                         listeners.setText(data.get(LISTENERS).toString());
-                        description.setText(data.get(CONTENT).toString());
+                        String descriptionTxt = data.get(CONTENT).toString();
+                        descriptionTxt = Html.fromHtml(descriptionTxt).toString();
+                        description.setText(descriptionTxt);
                         initSongView((List) data.get(TRACKS));
                         progress.hide();
                     }
@@ -171,8 +189,8 @@ public class AlbumActivity extends AppCompatActivity {
                 Map track = new HashMap();
 
                 JSONObject jsonTrackObject = jsonTracks.getJSONObject(i);
-                String trackName = jsonTrackObject.getString("name");
-                String trackURL = jsonTrackObject.getString("url");
+                String trackName = jsonTrackObject.getString(NAME);
+                String trackURL = jsonTrackObject.getString(URL);
                 track.put(NAME, trackName);
                 track.put(URL, trackURL);
 
