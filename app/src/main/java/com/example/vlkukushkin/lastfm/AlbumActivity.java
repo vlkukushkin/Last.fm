@@ -27,6 +27,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -135,8 +136,14 @@ public class AlbumActivity extends AppCompatActivity {
                     public void onResponse(JSONObject res) {
                         data = parseJSON(res);
                         Log.d("Logger",data.toString());
-                        new DownloadImageTask(albumImage)
-                                .execute(data.get(MEDIUM_IMAGE_URL).toString());
+
+                        String imageURL = data.get(MEDIUM_IMAGE_URL).toString();
+                        if (!imageURL.isEmpty()) {
+                            Picasso.with(context)
+                                    .load(imageURL)
+                                    .into(albumImage);
+                        }
+
                         playcount.setText(data.get(PLAYCOUNT).toString());
                         listeners.setText(data.get(LISTENERS).toString());
                         String descriptionTxt = data.get(CONTENT).toString();
@@ -206,30 +213,4 @@ public class AlbumActivity extends AppCompatActivity {
         };
         return map;
     }
-
-    private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
-        ImageView bmImage;
-
-        public DownloadImageTask(ImageView bmImage) {
-            this.bmImage = bmImage;
-        }
-
-        protected Bitmap doInBackground(String... urls) {
-            String urldisplay = urls[0];
-            Bitmap mIcon11 = null;
-            try {
-                InputStream in = new java.net.URL(urldisplay).openStream();
-                mIcon11 = BitmapFactory.decodeStream(in);
-            } catch (Exception e) {
-                Log.e("Error", e.getMessage());
-                e.printStackTrace();
-            }
-            return mIcon11;
-        }
-
-        protected void onPostExecute(Bitmap result) {
-            bmImage.setImageBitmap(result);
-        }
-    }
-
 }

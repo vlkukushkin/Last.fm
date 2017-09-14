@@ -86,9 +86,8 @@ public class MainActivity extends AppCompatActivity {
                 searchView.setQuery(queryText,true);
             }
         });
+        searchView.setVoice(false);
         searchView.setAdapter(searchAdapter);
-
-
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
